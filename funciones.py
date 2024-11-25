@@ -45,65 +45,47 @@ def generar_pregunta_situacional(perfil):
     except Exception as e:
         return f"Error al generar la pregunta situacional: {e}"
 
+import openai
+
 def evaluar_blandas(respuesta, variables_blandas):
     evaluaciones = {}
     justificaciones = {}
 
     for variable in variables_blandas:
-        # Creamos un prompt sin la pregunta
         prompt = f"Califica la siguiente respuesta sobre '{variable}' del 1 al 10. Respuesta: {respuesta}"
 
         try:
-            # Llamada a OpenAI para obtener la calificación
             response = openai.ChatCompletion.create(
                 model="gpt-3.5-turbo",
                 messages=[{"role": "user", "content": prompt}],
-                max_tokens=100  # Reducimos los tokens a 200 para asegurar que no se corte
+                max_tokens=100
             )
-
-            # Verificamos la respuesta y obtenemos el texto completo
             response_text = response['choices'][0]['message']['content'].strip()
-
-            # Limpiar la justificación (eliminar cualquier texto no deseado, como la pregunta)
-            justificacion_limpia = response_text.replace(f"{variable}:", "").strip()
-
-            # Asignamos la calificación a 0 porque no estamos utilizando calificaciones numéricas
-            evaluaciones[variable] = 0  # No estamos extrayendo la calificación
-            justificaciones[variable] = justificacion_limpia  # Solo la justificación limpia
-
+            evaluaciones[variable] = 0  # Simulación de calificación numérica
+            justificaciones[variable] = response_text  # Justificación del resultado
         except Exception as e:
-            st.error(f"Error al llamar a OpenAI: {e}")
             evaluaciones[variable] = 0
             justificaciones[variable] = "No se pudo generar justificación."
 
     return evaluaciones, justificaciones
-
 
 def evaluar_tecnicas(respuesta, variables_tecnicas):
     evaluaciones = {}
     justificaciones = {}
 
     for variable in variables_tecnicas:
-        # Simplificamos el prompt
         prompt = f"Califica la siguiente respuesta sobre '{variable}' del 1 al 10. Respuesta: {respuesta}"
 
         try:
-            # Llamada a OpenAI para obtener la calificación
             response = openai.ChatCompletion.create(
                 model="gpt-3.5-turbo",
                 messages=[{"role": "user", "content": prompt}],
-                max_tokens=100  # Reducimos los tokens a 100
+                max_tokens=100
             )
-
-            # Verificamos la respuesta y obtenemos el texto completo
             response_text = response['choices'][0]['message']['content'].strip()
-
-            # Mostramos la respuesta completa como justificación, incluida la calificación
-            evaluaciones[variable] = 0  # No estamos extrayendo la calificación
-            justificaciones[variable] = response_text  # Mostramos toda la respuesta de OpenAI
-
+            evaluaciones[variable] = 0  # Simulación de calificación numérica
+            justificaciones[variable] = response_text  # Justificación del resultado
         except Exception as e:
-            st.error(f"Error al llamar a OpenAI: {e}")
             evaluaciones[variable] = 0
             justificaciones[variable] = "No se pudo generar justificación."
 

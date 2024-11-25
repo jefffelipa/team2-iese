@@ -71,7 +71,7 @@ elif st.session_state["paso_actual"] == 3:
         if st.session_state["pregunta_situacional"] is None:
             st.session_state["pregunta_situacional"] = generar_pregunta_situacional(perfil)
 
-        st.write(f"Pregunta: {st.session_state['pregunta_situacional']}")
+        st.write(f"{st.session_state['pregunta_situacional']}")
         respuesta = st.text_area("Escribe tu respuesta:", value=st.session_state.get("respuesta_situacional", ""))
 
         if respuesta:
@@ -92,7 +92,8 @@ elif st.session_state["paso_actual"] == 4:
         if st.session_state["pregunta_tecnica_1"] is None:
             st.session_state["pregunta_tecnica_1"] = generar_pregunta(perfil)
 
-        st.write(f"Pregunta: {st.session_state['pregunta_tecnica_1']}")
+        st.write(f"{st.session_state['pregunta_tecnica_1']}")
+        st.session_state["respuesta_tecnica_1"] = "..."
         respuesta = st.text_area("Escribe tu respuesta:", value=st.session_state.get("respuesta_tecnica_1", ""))
 
         if respuesta:
@@ -114,6 +115,7 @@ elif st.session_state["paso_actual"] == 5:
             st.session_state["pregunta_tecnica_2"] = generar_pregunta(perfil)
 
         st.write(f"Pregunta: {st.session_state['pregunta_tecnica_2']}")
+        st.session_state["respuesta_tecnica_2"] = "...."
         respuesta = st.text_area("Escribe tu respuesta:", value=st.session_state.get("respuesta_tecnica_2", ""))
 
         if respuesta:
@@ -135,6 +137,7 @@ elif st.session_state["paso_actual"] == 6:
             st.session_state["pregunta_tecnica_3"] = generar_pregunta(perfil)
 
         st.write(f"Pregunta: {st.session_state['pregunta_tecnica_3']}")
+        st.session_state["respuesta_tecnica_3"] = "....."
         respuesta = st.text_area("Escribe tu respuesta:", value=st.session_state.get("respuesta_tecnica_3", ""))
 
         if respuesta:
@@ -145,32 +148,39 @@ elif st.session_state["paso_actual"] == 6:
     else:
         st.error("⚠️ Selecciona un perfil antes de continuar.")
 
-# Paso 7: Evaluación de Respuestas
-elif st.session_state["paso_actual"] == 7:
-    mostrar_progreso()
-    st.title("Resultados de la Evaluación")
+import streamlit as st
+from funciones import evaluar_blandas, evaluar_tecnicas
 
-    respuestas = {
-        "Pregunta Situacional": st.session_state["respuesta_situacional"],
-        "Primera Pregunta Técnica": st.session_state["respuesta_tecnica_1"],
-        "Segunda Pregunta Técnica": st.session_state["respuesta_tecnica_2"],
-        "Tercera Pregunta Técnica": st.session_state["respuesta_tecnica_3"],
-    }
+# Este es el paso 7, donde se muestran las evaluaciones
+if st.session_state["paso_actual"] == 7:
+    # Evaluar habilidades blandas y técnicas
+    variables_blandas = ["Empatía", "Colaboración", "Adaptabilidad", "Trabajo en equipo"]
+    variables_tecnicas = ["Validez Semántica", "Claridad", "Profundidad Técnica", "Nivel de Dificultad"]
 
-    evaluacion_blandas = evaluar_blandas(respuestas["Pregunta Situacional"], variables_blandas)
-    evaluacion_tecnicas = evaluar_tecnicas(respuestas["Primera Pregunta Técnica"], variables_tecnicas)
+    # Evaluación de las respuestas
+    evaluaciones_blandas, justificaciones_blandas = evaluar_blandas(
+        st.session_state["respuesta_situacional"], variables_blandas
+    )
+    evaluaciones_tecnicas, justificaciones_tecnicas = evaluar_tecnicas(
+        st.session_state["respuesta_tecnica_1"], variables_tecnicas
+    )
 
-    st.subheader("Evaluación de Habilidades Blandas")
-    for variable, resultado in evaluacion_blandas.items():
-        st.write(f"{variable}: {resultado}")
+    # Mostrar las evaluaciones de habilidades blandas
+    st.write("### Evaluación de Habilidades Blandas")
+    for variable, resultado in evaluaciones_blandas.items():
+        justificacion = justificaciones_blandas.get(variable, "No disponible")
+        st.write(f"**{variable}**: {resultado}")
+        st.write(f"Justificación: {justificacion}")
 
-    st.subheader("Evaluación de Habilidades Técnicas")
-    for variable, resultado in evaluacion_tecnicas.items():
-        st.write(f"{variable}: {resultado}")
+    # Mostrar las evaluaciones de habilidades técnicas
+    st.write("### Evaluación de Habilidades Técnicas")
+    for variable, resultado in evaluaciones_tecnicas.items():
+        justificacion = justificaciones_tecnicas.get(variable, "No disponible")
+        st.write(f"**{variable}**: {resultado}")
+        st.write(f"Justificación: {justificacion}")
 
-    if st.button("Generar Informe PDF"):
-        pdf_path = generar_pdf(st.session_state["perfil_seleccionado"], respuestas)
-        st.success(f"Informe generado: {pdf_path}")
+    # Botón para finalizar el cuestionario
+    st.button("Finalizar Cuestionario", on_click=avanzar_paso, use_container_width=True)
 
 # Paso 8: Finalización
 elif st.session_state["paso_actual"] == 8:
