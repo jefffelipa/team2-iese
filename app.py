@@ -151,7 +151,7 @@ elif st.session_state["paso_actual"] == 6:
 import streamlit as st
 from funciones import evaluar_blandas, evaluar_tecnicas
 
-# Este es el paso 7, donde se muestran las evaluaciones
+# Paso 7, donde se muestran las evaluaciones
 if st.session_state["paso_actual"] == 7:
     # Evaluar habilidades blandas y técnicas
     variables_blandas = ["Empatía", "Colaboración", "Adaptabilidad", "Trabajo en equipo"]
@@ -169,15 +169,15 @@ if st.session_state["paso_actual"] == 7:
     st.write("### Evaluación de Habilidades Blandas")
     for variable, resultado in evaluaciones_blandas.items():
         justificacion = justificaciones_blandas.get(variable, "No disponible")
-        st.write(f"**{variable}**: {resultado}")
-        st.write(f"Justificación: {justificacion}")
+        st.write(f"**{variable}**: {resultado}{justificacion}")
+        #st.write(justificacion)
 
     # Mostrar las evaluaciones de habilidades técnicas
     st.write("### Evaluación de Habilidades Técnicas")
     for variable, resultado in evaluaciones_tecnicas.items():
         justificacion = justificaciones_tecnicas.get(variable, "No disponible")
-        st.write(f"**{variable}**: {resultado}")
-        st.write(f"Justificación: {justificacion}")
+        st.write(f"**{variable}**: {resultado}{justificacion}")
+        #st.write(f"Justificación: {justificacion}")
 
     # Botón para finalizar el cuestionario
     st.button("Finalizar Cuestionario", on_click=avanzar_paso, use_container_width=True)

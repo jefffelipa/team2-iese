@@ -52,19 +52,23 @@ def evaluar_blandas(respuesta, variables_blandas):
     justificaciones = {}
 
     for variable in variables_blandas:
-        prompt = f"Califica la siguiente respuesta sobre '{variable}' del 1 al 10. Respuesta: {respuesta}"
-
+        prompt = (
+            f"Evalúa la siguiente respuesta según la variable '{variable}'.\n\n"
+            f"Respuesta: {respuesta}\n\n"
+            f"Primero, proporciona una calificación del 1 al 10, solo dame el número entero y luego, justifica brevemente si no cumple los criterios. Empieza la frase con la expresión: La valoración es y se justifica a"
+        )
         try:
             response = openai.ChatCompletion.create(
                 model="gpt-3.5-turbo",
                 messages=[{"role": "user", "content": prompt}],
                 max_tokens=100
             )
+
             response_text = response['choices'][0]['message']['content'].strip()
-            evaluaciones[variable] = 0  # Simulación de calificación numérica
+            evaluaciones[variable] = ""  # Simulación de calificación numérica
             justificaciones[variable] = response_text  # Justificación del resultado
         except Exception as e:
-            evaluaciones[variable] = 0
+            evaluaciones[variable] = ""
             justificaciones[variable] = "No se pudo generar justificación."
 
     return evaluaciones, justificaciones
@@ -74,7 +78,11 @@ def evaluar_tecnicas(respuesta, variables_tecnicas):
     justificaciones = {}
 
     for variable in variables_tecnicas:
-        prompt = f"Califica la siguiente respuesta sobre '{variable}' del 1 al 10. Respuesta: {respuesta}"
+        prompt = (
+            f"Evalúa la siguiente respuesta según la variable '{variable}'.\n\n"
+            f"Respuesta: {respuesta}\n\n"
+            f"Primero, proporciona una calificación del 1 al 10, solo dame el número entero y luego, justifica brevemente si no cumple los criterios. Empieza la frase con la expresión: La valoración es y se justifica a"
+        )
 
         try:
             response = openai.ChatCompletion.create(
@@ -83,7 +91,7 @@ def evaluar_tecnicas(respuesta, variables_tecnicas):
                 max_tokens=100
             )
             response_text = response['choices'][0]['message']['content'].strip()
-            evaluaciones[variable] = 0  # Simulación de calificación numérica
+            evaluaciones[variable] = ""  # Simulación de calificación numérica
             justificaciones[variable] = response_text  # Justificación del resultado
         except Exception as e:
             evaluaciones[variable] = 0
