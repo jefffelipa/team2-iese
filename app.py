@@ -1,5 +1,6 @@
 
 import streamlit as st
+from funciones import guardar_evaluacion
 from funciones import (
     generar_pregunta,
     generar_pregunta_situacional,
@@ -165,18 +166,24 @@ if st.session_state["paso_actual"] == 7:
         st.session_state["respuesta_tecnica_1"], variables_tecnicas
     )
 
+    # Guardar los datos en Firestore (Agregando esta sección)
+    perfil = st.session_state.get("perfil_seleccionado", "desconocido")  # Asegúrate de tener el perfil del candidato
+    guardar_evaluacion(
+        perfil, evaluaciones_blandas, justificaciones_blandas, evaluaciones_tecnicas, justificaciones_tecnicas
+    )
+
     # Mostrar las evaluaciones de habilidades blandas
     st.write("### Evaluación de Habilidades Blandas")
     for variable, resultado in evaluaciones_blandas.items():
         justificacion = justificaciones_blandas.get(variable, "No disponible")
-        st.write(f"**{variable}**: {resultado}{justificacion}")
+        st.write(f"**{variable}**: {justificacion}")
         #st.write(justificacion)
 
     # Mostrar las evaluaciones de habilidades técnicas
     st.write("### Evaluación de Habilidades Técnicas")
     for variable, resultado in evaluaciones_tecnicas.items():
         justificacion = justificaciones_tecnicas.get(variable, "No disponible")
-        st.write(f"**{variable}**: {resultado}{justificacion}")
+        st.write(f"**{variable}**: {justificacion}")
         #st.write(f"Justificación: {justificacion}")
 
     # Botón para finalizar el cuestionario

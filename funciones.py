@@ -6,6 +6,61 @@ from config_variables import variables_blandas, variables_tecnicas
 import fpdf
 from fpdf import FPDF
 import os
+import firebase_admin
+from firebase_admin import credentials, firestore
+from datetime import datetime
+
+# Configuración de claves de Firebase desde variables de entorno
+firebase_config = {
+    "type": os.getenv("FIREBASE_TYPE"),
+    "project_id": os.getenv("FIREBASE_PROJECT_ID"),
+    "private_key_id": os.getenv("FIREBASE_PRIVATE_KEY_ID"),
+    "private_key": os.getenv("FIREBASE_PRIVATE_KEY").replace("\\n", "\n"),  # Asegura que las líneas escapadas funcionen
+    "client_email": os.getenv("FIREBASE_CLIENT_EMAIL"),
+    "client_id": os.getenv("FIREBASE_CLIENT_ID"),
+    "auth_uri": os.getenv("FIREBASE_AUTH_URI"),
+    "token_uri": os.getenv("FIREBASE_TOKEN_URI"),
+    "auth_provider_x509_cert_url": os.getenv("FIREBASE_AUTH_PROVIDER_X509_CERT_URL"),
+    "client_x509_cert_url": os.getenv("FIREBASE_CLIENT_X509_CERT_URL"),
+}
+
+# Inicialización de Firebase con el archivo de credenciales
+def initialize_firebase():
+    # Verifica si Firebase ya ha sido inicializado
+    if not firebase_admin._apps:
+      cred = credentials.Certificate(firebase_config)
+      firebase_admin.initialize_app(cred)
+    else:
+      print("Firebase ya está inicializado")
+
+    db = firestore.client()  # Conexión a Firestore
+    return db
+
+# Función para guardar la evaluación en Firestore
+def guardar_evaluacion(perfil, evaluaciones_blandas, justificaciones_blandas, evaluaciones_tecnicas, justificaciones_tecnicas):
+    db = initialize_firebase()  # Inicializa Firebase
+
+    fecha_hora_actual = datetime.now().isoformat()  # Esto da la fecha y hora en formato ISO 8601
+
+
+    # Usando el método .add() para que Firestore genere un ID único automáticamente
+    doc_ref = db.collection('evaluaciones').add({
+        "perfil": perfil,
+        "fecha_registro": fecha_hora_actual,  # Añadimos la fecha y hora
+        "habilidades_blandas": {
+            "Empatía": {"calificacion": evaluaciones_blandas.get("Empatía", 0), "justificacion": justificaciones_blandas.get("Empatía", "No disponible")},
+            "Colaboración": {"calificacion": evaluaciones_blandas.get("Colaboración", 0), "justificacion": justificaciones_blandas.get("Colaboración", "No disponible")},
+            "Adaptabilidad": {"calificacion": evaluaciones_blandas.get("Adaptabilidad", 0), "justificacion": justificaciones_blandas.get("Adaptabilidad", "No disponible")},
+            "Trabajo en equipo": {"calificacion": evaluaciones_blandas.get("Trabajo en equipo", 0), "justificacion": justificaciones_blandas.get("Trabajo en equipo", "No disponible")}
+        },
+        "habilidades_tecnicas": {
+            "Validez Semántica": {"calificacion": evaluaciones_tecnicas.get("Validez Semántica", 0), "justificacion": justificaciones_tecnicas.get("Validez Semántica", "No disponible")},
+            "Claridad": {"calificacion": evaluaciones_tecnicas.get("Claridad", 0), "justificacion": justificaciones_tecnicas.get("Claridad", "No disponible")},
+            "Profundidad Técnica": {"calificacion": evaluaciones_tecnicas.get("Profundidad Técnica", 0), "justificacion": justificaciones_tecnicas.get("Profundidad Técnica", "No disponible")},
+            "Nivel de Dificultad": {"calificacion": evaluaciones_tecnicas.get("Nivel de Dificultad", 0), "justificacion": justificaciones_tecnicas.get("Nivel de Dificultad", "No disponible")}
+        }
+    })
+    print("Evaluación guardada con éxito en Firestore.")
 
 # Configurar la clave de API desde las variables de entorno
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -65,7 +120,15 @@ def evaluar_blandas(respuesta, variables_blandas):
             )
 
             response_text = response['choices'][0]['message']['content'].strip()
-            evaluaciones[variable] = ""  # Simulación de calificación numérica
+
+            #Extraer el número de la calificación (primer número)
+            match = re.search(r"\d+", response_text)  # Buscar el primer número
+            if match:
+                calificacion = int(match.group())  # Convertir el número a entero
+            else:
+                calificacion = 0  # Si no se encuentra un número, asignamos 0
+
+            evaluaciones[variable] = calificacion  # Simulación de calificación numérica
             justificaciones[variable] = response_text  # Justificación del resultado
         except Exception as e:
             evaluaciones[variable] = ""
@@ -91,7 +154,15 @@ def evaluar_tecnicas(respuesta, variables_tecnicas):
                 max_tokens=100
             )
             response_text = response['choices'][0]['message']['content'].strip()
-            evaluaciones[variable] = ""  # Simulación de calificación numérica
+
+            #Extraer el número de la calificación (primer número)
+            match = re.search(r"\d+", response_text)  # Buscar el primer número
+            if match:
+                calificacion = int(match.group())  # Convertir el número a entero
+            else:
+                calificacion = 0  # Si no se encuentra un número, asignamos 0
+
+            evaluaciones[variable] = calificacion  # Simulación de calificación numérica
             justificaciones[variable] = response_text  # Justificación del resultado
         except Exception as e:
             evaluaciones[variable] = 0

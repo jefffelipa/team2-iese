@@ -1,4 +1,5 @@
-streamlit
 openai==0.27.8
+streamlit
 fpdf
 python-dotenv
+firebase-admin
