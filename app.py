@@ -29,7 +29,7 @@ def avanzar_paso():
 
 # Mostrar el progreso como texto (arriba)
 def mostrar_progreso():
-    total_pasos = 8
+    total_pasos = 5
     st.markdown(f"**Paso {st.session_state['paso_actual']} / {total_pasos}**")
 
 # Paso 1: Bienvenida
@@ -84,65 +84,64 @@ elif st.session_state["paso_actual"] == 3:
         st.error("⚠️ Selecciona un perfil antes de continuar.")
 
 # Paso 4: Primera Pregunta Técnica
+#elif st.session_state["paso_actual"] == 4:
+#    mostrar_progreso()
+#    st.title("Pregunta Técnica")
+#    perfil = st.session_state.get("perfil_seleccionado")
+
+#    if perfil:
+#        if st.session_state["pregunta_tecnica_1"] is None:
+#            st.session_state["pregunta_tecnica_1"] = generar_pregunta(perfil)
+
+#        st.write(f"{st.session_state['pregunta_tecnica_1']}")
+#        st.session_state["respuesta_tecnica_1"] = "..."
+#        respuesta = st.text_area("Escribe tu respuesta:", value=st.session_state.get("respuesta_tecnica_1", ""))
+
+#        if respuesta:
+#            st.session_state["respuesta_tecnica_1"] = respuesta
+#            st.button("Siguiente", on_click=avanzar_paso, use_container_width=True)
+#        else:
+#            st.button("Siguiente", disabled=True, use_container_width=True)
+#    else:
+#        st.error("⚠️ Selecciona un perfil antes de continuar.")
+
+# Paso 5: Segunda Pregunta Técnica
+#elif st.session_state["paso_actual"] == 5:
+#    mostrar_progreso()
+#    st.title("Segunda Pregunta Técnica")
+#    perfil = st.session_state.get("perfil_seleccionado")
+
+#    if perfil:
+#        if st.session_state["pregunta_tecnica_2"] is None:
+#            st.session_state["pregunta_tecnica_2"] = generar_pregunta(perfil)
+#        st.write(f"Pregunta: {st.session_state['pregunta_tecnica_2']}")
+#        st.session_state["respuesta_tecnica_2"] = "...."
+#        respuesta = st.text_area("Escribe tu respuesta:", value=st.session_state.get("respuesta_tecnica_2", ""))
+
+#        if respuesta:
+#            st.session_state["respuesta_tecnica_2"] = respuesta
+#            st.button("Siguiente", on_click=avanzar_paso, use_container_width=True)
+#        else:
+#            st.button("Siguiente", disabled=True, use_container_width=True)
+#    else:
+#        st.error("⚠️ Selecciona un perfil antes de continuar.")
+
+#Paso 6: Tercera Pregunta Técnica
 elif st.session_state["paso_actual"] == 4:
     mostrar_progreso()
-    st.title("Primera Pregunta Técnica")
+    st.title("Pregunta Técnica")
     perfil = st.session_state.get("perfil_seleccionado")
 
     if perfil:
         if st.session_state["pregunta_tecnica_1"] is None:
             st.session_state["pregunta_tecnica_1"] = generar_pregunta(perfil)
 
-        st.write(f"{st.session_state['pregunta_tecnica_1']}")
-        st.session_state["respuesta_tecnica_1"] = "..."
+        st.write(f"Pregunta: {st.session_state['pregunta_tecnica_1']}")
+        st.session_state["respuesta_tecnica_1"] = "....."
         respuesta = st.text_area("Escribe tu respuesta:", value=st.session_state.get("respuesta_tecnica_1", ""))
 
         if respuesta:
             st.session_state["respuesta_tecnica_1"] = respuesta
-            st.button("Siguiente", on_click=avanzar_paso, use_container_width=True)
-        else:
-            st.button("Siguiente", disabled=True, use_container_width=True)
-    else:
-        st.error("⚠️ Selecciona un perfil antes de continuar.")
-
-# Paso 5: Segunda Pregunta Técnica
-elif st.session_state["paso_actual"] == 5:
-    mostrar_progreso()
-    st.title("Segunda Pregunta Técnica")
-    perfil = st.session_state.get("perfil_seleccionado")
-
-    if perfil:
-        if st.session_state["pregunta_tecnica_2"] is None:
-            st.session_state["pregunta_tecnica_2"] = generar_pregunta(perfil)
-
-        st.write(f"Pregunta: {st.session_state['pregunta_tecnica_2']}")
-        st.session_state["respuesta_tecnica_2"] = "...."
-        respuesta = st.text_area("Escribe tu respuesta:", value=st.session_state.get("respuesta_tecnica_2", ""))
-
-        if respuesta:
-            st.session_state["respuesta_tecnica_2"] = respuesta
-            st.button("Siguiente", on_click=avanzar_paso, use_container_width=True)
-        else:
-            st.button("Siguiente", disabled=True, use_container_width=True)
-    else:
-        st.error("⚠️ Selecciona un perfil antes de continuar.")
-
-# Paso 6: Tercera Pregunta Técnica
-elif st.session_state["paso_actual"] == 6:
-    mostrar_progreso()
-    st.title("Tercera Pregunta Técnica")
-    perfil = st.session_state.get("perfil_seleccionado")
-
-    if perfil:
-        if st.session_state["pregunta_tecnica_3"] is None:
-            st.session_state["pregunta_tecnica_3"] = generar_pregunta(perfil)
-
-        st.write(f"Pregunta: {st.session_state['pregunta_tecnica_3']}")
-        st.session_state["respuesta_tecnica_3"] = "....."
-        respuesta = st.text_area("Escribe tu respuesta:", value=st.session_state.get("respuesta_tecnica_3", ""))
-
-        if respuesta:
-            st.session_state["respuesta_tecnica_3"] = respuesta
             st.button("Mostrar Resultados", on_click=avanzar_paso, use_container_width=True)
         else:
             st.button("Mostrar Resultados", disabled=True, use_container_width=True)
@@ -152,8 +151,8 @@ elif st.session_state["paso_actual"] == 6:
 import streamlit as st
 from funciones import evaluar_blandas, evaluar_tecnicas
 
-# Paso 7, donde se muestran las evaluaciones
-if st.session_state["paso_actual"] == 7:
+# Paso 5, donde se muestran las evaluaciones
+if st.session_state["paso_actual"] == 5:
     # Evaluar habilidades blandas y técnicas
     variables_blandas = ["Empatía", "Colaboración", "Adaptabilidad", "Trabajo en equipo"]
     variables_tecnicas = ["Validez Semántica", "Claridad", "Profundidad Técnica", "Nivel de Dificultad"]
@@ -186,8 +185,28 @@ if st.session_state["paso_actual"] == 7:
         st.write(f"**{variable}**: {justificacion}")
         #st.write(f"Justificación: {justificacion}")
 
+    # Obtener las respuestas y el perfil de la sesión o variables dinámicas
+    perfil = st.session_state.get("perfil_seleccionado", None)
+    respuesta_situacional = st.session_state.get("respuesta_situacional", "")
+    respuesta_tecnica_1 = st.session_state.get("respuesta_tecnica_1", "")
+    pregunta_situacional = st.session_state.get("pregunta_situacional", "")
+    pregunta_tecnica_1 = st.session_state.get("pregunta_tecnica_1", "")
+
+    # Generar el PDF solo si todas las respuestas están presentes
+    pdf_path = generar_pdf(perfil, respuesta_situacional, respuesta_tecnica_1, pregunta_situacional, pregunta_tecnica_1)
+
+    # Mostrar el PDF generado con el botón de descarga
+    st.write("### Informe de Evaluación del Candidato")
+    #st.markdown(f"**Descargar Informe**: [Haz clic aquí para descargar el PDF]({pdf_path})")
+
+    with open(pdf_path, "rb") as f:
+            st.download_button("Descargar PDF", data=f, file_name="Informe_de_evaluacion.pdf", mime="application/pdf", use_container_width=True)
+
     # Botón para finalizar el cuestionario
     st.button("Finalizar Cuestionario", on_click=avanzar_paso, use_container_width=True)
+
+
+    #pdf_output_path = generar_pdf(perfil, respuesta_situacional, respuesta_tecnica_1, respuesta_tecnica_2, respuesta_tecnica_3)
 
 # Paso 8: Finalización
 elif st.session_state["paso_actual"] == 8:
