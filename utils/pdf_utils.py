@@ -22,14 +22,17 @@ def autenticar_google_drive():
     if not credentials_json:
         raise ValueError("No se encontró la variable de entorno GOOGLE_APPLICATION_CREDENTIALS_JSON")
     
-    # Parsear el JSON cargado desde la variable de entorno
+    # Reemplazar \n por saltos de línea reales en la clave privada
+    credentials_json = credentials_json.replace("\\n", "\n")
+    
+    # Parsear el JSON
     credentials_info = json.loads(credentials_json)
-
-    # Crear credenciales usando el JSON parseado
+    
+    # Crear credenciales desde la información del servicio
     credentials = service_account.Credentials.from_service_account_info(
         credentials_info, scopes=["https://www.googleapis.com/auth/drive.file"]
     )
-
+    
     # Construir el cliente de la API de Google Drive
     service = build('drive', 'v3', credentials=credentials)
     return service
