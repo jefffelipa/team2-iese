@@ -4,12 +4,6 @@ import openai
 import numpy as np
 from fpdf import FPDF
 import streamlit as st
-from funciones import (
-    generar_pregunta,
-    generar_pregunta_situacional,
-    evaluar_blandas,
-    evaluar_tecnicas,
-)
 
 def crear_spider(datos, categorias, titulo, nombre_archivo):
     valores = list(datos.values())
