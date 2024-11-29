@@ -1,157 +1,171 @@
 
-import matplotlib.pyplot as plt
 import openai
-import numpy as np
-from fpdf import FPDF
 import streamlit as st
+import re
+from config_variables import variables_blandas, variables_tecnicas
+import fpdf
+from fpdf import FPDF
+import os
+import firebase_admin
+from firebase_admin import credentials, firestore
+from datetime import datetime
 
-def crear_spider(datos, categorias, titulo, nombre_archivo):
-    valores = list(datos.values())
-    valores += valores[:1]  # Volver al inicio
-    categorias += categorias[:1]  # Repetir la primera categoría
+# Configuración de claves de Firebase desde variables de entorno
+firebase_config = {
+    "type": os.getenv("FIREBASE_TYPE"),
+    "project_id": os.getenv("FIREBASE_PROJECT_ID"),
+    "private_key_id": os.getenv("FIREBASE_PRIVATE_KEY_ID"),
+    "private_key": os.getenv("FIREBASE_PRIVATE_KEY").replace("\\n", "\n"),  # Asegura que las líneas escapadas funcionen
+    "client_email": os.getenv("FIREBASE_CLIENT_EMAIL"),
+    "client_id": os.getenv("FIREBASE_CLIENT_ID"),
+    "auth_uri": os.getenv("FIREBASE_AUTH_URI"),
+    "token_uri": os.getenv("FIREBASE_TOKEN_URI"),
+    "auth_provider_x509_cert_url": os.getenv("FIREBASE_AUTH_PROVIDER_X509_CERT_URL"),
+    "client_x509_cert_url": os.getenv("FIREBASE_CLIENT_X509_CERT_URL"),
+}
 
-    angulos = np.linspace(0, 2 * np.pi, len(categorias), endpoint=True)
-    fig, ax = plt.subplots(figsize=(4, 4), subplot_kw=dict(polar=True))
-    ax.fill(angulos, valores, color='blue', alpha=0.3)
-    ax.plot(angulos, valores, color='blue', linewidth=2)
-    ax.set_yticks(range(1, 11))
-    ax.set_yticklabels(range(1, 11), fontsize=8, color="gray")
-    ax.set_xticks(angulos)
-    ax.set_xticklabels(categorias, fontsize=10, color="black")
-    ax.set_title(titulo, size=12, color="blue", pad=20)
-    plt.savefig(nombre_archivo, dpi=150, bbox_inches='tight', transparent=True)
-    plt.close()
+# Inicialización de Firebase con el archivo de credenciales
+def initialize_firebase():
+    # Verifica si Firebase ya ha sido inicializado
+    if not firebase_admin._apps:
+      cred = credentials.Certificate(firebase_config)
+      firebase_admin.initialize_app(cred)
+    else:
+      print("Firebase ya está inicializado")
 
-# Función para generar el PDF
-def generar_pdf(perfil, respuesta_situacional, respuesta_tecnica_1, pregunta_situacional, pregunta_tecnica_1):
-    pdf = FPDF()
-    pdf.set_auto_page_break(auto=True, margin=15)
-    pdf.add_page()
+    db = firestore.client()  # Conexión a Firestore
+    return db
 
-    #copiado de otra funcion
-    # Evaluar habilidades blandas y técnicas
-    variables_blandas = ["Empatía", "Colaboración", "Adaptabilidad", "Trabajo en equipo"]
-    variables_tecnicas = ["Validez Semántica", "Claridad", "Profundidad Técnica", "Nivel de Dificultad"]
+# Función para guardar la evaluación en Firestore
+def guardar_evaluacion(perfil, evaluaciones_blandas, justificaciones_blandas, evaluaciones_tecnicas, justificaciones_tecnicas):
+    db = initialize_firebase()  # Inicializa Firebase
 
-    # Evaluación de las respuestas
-    evaluaciones_blandas, justificaciones_blandas = evaluar_blandas(
-        st.session_state["respuesta_situacional"], variables_blandas
-    )
-    evaluaciones_tecnicas, justificaciones_tecnicas = evaluar_tecnicas(
-        st.session_state["respuesta_tecnica_1"], variables_tecnicas
-    )
+    fecha_hora_actual = datetime.now().isoformat()  # Esto da la fecha y hora en formato ISO 8601
 
-    #elminado copiado
 
-    # Configurar el título y agregar logo en la parte superior
-    pdf.set_font('Arial', 'B', 16)
-    pdf.cell(200, 30, txt="Informe de Evaluación", ln=True, align='C')
+    # Usando el método .add() para que Firestore genere un ID único automáticamente
+    doc_ref = db.collection('evaluaciones').add({
+        "perfil": perfil,
+        "fecha_registro": fecha_hora_actual,  # Añadimos la fecha y hora
+        "habilidades_blandas": {
+            "Empatía": {"calificacion": evaluaciones_blandas.get("Empatía", 0), "justificacion": justificaciones_blandas.get("Empatía", "No disponible")},
+            "Colaboración": {"calificacion": evaluaciones_blandas.get("Colaboración", 0), "justificacion": justificaciones_blandas.get("Colaboración", "No disponible")},
+            "Adaptabilidad": {"calificacion": evaluaciones_blandas.get("Adaptabilidad", 0), "justificacion": justificaciones_blandas.get("Adaptabilidad", "No disponible")},
+            "Trabajo en equipo": {"calificacion": evaluaciones_blandas.get("Trabajo en equipo", 0), "justificacion": justificaciones_blandas.get("Trabajo en equipo", "No disponible")}
+        },
+        "habilidades_tecnicas": {
+            "Validez Semántica": {"calificacion": evaluaciones_tecnicas.get("Validez Semántica", 0), "justificacion": justificaciones_tecnicas.get("Validez Semántica", "No disponible")},
+            "Claridad": {"calificacion": evaluaciones_tecnicas.get("Claridad", 0), "justificacion": justificaciones_tecnicas.get("Claridad", "No disponible")},
+            "Profundidad Técnica": {"calificacion": evaluaciones_tecnicas.get("Profundidad Técnica", 0), "justificacion": justificaciones_tecnicas.get("Profundidad Técnica", "No disponible")},
+            "Nivel de Dificultad": {"calificacion": evaluaciones_tecnicas.get("Nivel de Dificultad", 0), "justificacion": justificaciones_tecnicas.get("Nivel de Dificultad", "No disponible")}
+        }
+    })
+    print("Evaluación guardada con éxito en Firestore.")
 
-    # Agregar logo en la parte superior derecha
-    pdf.image("/content/IESE_LOGO_UPDATED_2023 (1).png", 150, 8, 33)
+# Configurar la clave de API desde las variables de entorno
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
-    # Margen superior
-    pdf.ln(2)
+# Verificar si la clave de API está configurada
+if not openai.api_key:
+    raise ValueError("La clave de API de OpenAI no está configurada.")
 
-    # Evaluación final del candidato
-    #evaluacion_blanda, justificaciones_blandas = evaluar_blandas(respuesta_situacional, {})
-    #evaluacion_tecnica, justificaciones_tecnicas = evaluar_tecnicas(respuesta_tecnica_1, {})
+# Función para generar pregunta técnica
+def generar_pregunta(perfil, respuesta_anterior=None):
+    prompt = f"Genera una pregunta técnica robusta y situacional de al menos 5 lineas para un candidato con el perfil de {perfil}."
+    if respuesta_anterior:
+        prompt += f"\nTen en cuenta esta respuesta previa: {respuesta_anterior}"
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=150
+        )
+        return response['choices'][0]['message']['content']
+    except Exception as e:
+        return f"Error al generar la pregunta: {e}"
 
-    habilidades_blandas_apto = all([evaluacion >= 7 for evaluacion in evaluaciones_blandas.values()])
-    habilidades_tecnicas_apto = all([evaluacion >= 7 for evaluacion in evaluaciones_tecnicas.values()])
-    evaluacion_final = "Apto" if habilidades_blandas_apto and habilidades_tecnicas_apto else "No Apto"
-
-    # prompt para dar descripcion del informe final
+# Función para generar pregunta situacional
+def generar_pregunta_situacional(perfil):
     prompt = (
-            f"Eres un especialista en reclutamiento y necesitas dar una breve descripción para dar paso al informe detallado de un postulante cuyo resultado es '{evaluacion_final}'.\n\n"
-            f"Sin saltos de líneas, y con no más de 120 palabras describe el resultado considerando una breve descripción de habilidades duras y blandas, no entres en detalles, solo algo general y menciona dentro de la respuesta si s apto o no. "
+        f"Basándote en el perfil de {perfil}, genera una pregunta situacional relacionada con trabajo en equipo, colaboración y adaptación al cambio. "
+        f"El contexto debe tener al menos 7 líneas de detalle, y la pregunta debe ser breve y clara al final."
+    )
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=250
+        )
+        return response['choices'][0]['message']['content']
+    except Exception as e:
+        return f"Error al generar la pregunta situacional: {e}"
+
+import openai
+
+def evaluar_blandas(respuesta, variables_blandas):
+    evaluaciones = {}
+    justificaciones = {}
+
+    for variable in variables_blandas:
+        prompt = (
+            f"Evalúa la siguiente respuesta según la variable '{variable}'.\n\n"
+            f"Respuesta: {respuesta}\n\n"
+            f"Primero, proporciona una calificación del 1 al 10, solo dame el número entero y luego, justifica brevemente si no cumple los criterios. Empieza la frase con la expresión: La valoración es y se justifica a"
+        )
+        try:
+            response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=100
+            )
+
+            response_text = response['choices'][0]['message']['content'].strip()
+
+            #Extraer el número de la calificación (primer número)
+            match = re.search(r"\d+", response_text)  # Buscar el primer número
+            if match:
+                calificacion = int(match.group())  # Convertir el número a entero
+            else:
+                calificacion = 0  # Si no se encuentra un número, asignamos 0
+
+            evaluaciones[variable] = calificacion  # Simulación de calificación numérica
+            justificaciones[variable] = response_text  # Justificación del resultado
+        except Exception as e:
+            evaluaciones[variable] = ""
+            justificaciones[variable] = "No se pudo generar justificación."
+
+    return evaluaciones, justificaciones
+
+def evaluar_tecnicas(respuesta, variables_tecnicas):
+    evaluaciones = {}
+    justificaciones = {}
+
+    for variable in variables_tecnicas:
+        prompt = (
+            f"Evalúa la siguiente respuesta según la variable '{variable}'.\n\n"
+            f"Respuesta: {respuesta}\n\n"
+            f"Primero, proporciona una calificación del 1 al 10, solo dame el número entero y luego, justifica brevemente si no cumple los criterios. Empieza la frase con la expresión: La valoración es y se justifica a"
         )
 
-    response = openai.ChatCompletion.create(
-    model="gpt-3.5-turbo",
-    messages=[{"role": "user", "content": prompt}],
-    max_tokens=250
-        )
-    response_text = response['choices'][0]['message']['content'].strip()
-    #cierre prompt
+        try:
+            response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=100
+            )
+            response_text = response['choices'][0]['message']['content'].strip()
 
-    pdf.set_font("Arial", 'B', size=12)
-    pdf.cell(200, 10, txt=f"Evaluación final del candidato:", ln=True)
-    pdf.set_font("Arial", size=12)
-    pdf.multi_cell(0, 10, txt=f"{response_text}")
+            #Extraer el número de la calificación (primer número)
+            match = re.search(r"\d+", response_text)  # Buscar el primer número
+            if match:
+                calificacion = int(match.group())  # Convertir el número a entero
+            else:
+                calificacion = 0  # Si no se encuentra un número, asignamos 0
 
-    # Evaluación de habilidades blandas
-    pdf.ln(10)
-    pdf.set_font("Arial", 'B', 12)
-    pdf.cell(200, 10, txt="Evaluación de habilidades blandas", ln=True)
-    pdf.set_font("Arial", size=12)
+            evaluaciones[variable] = calificacion  # Simulación de calificación numérica
+            justificaciones[variable] = response_text  # Justificación del resultado
+        except Exception as e:
+            evaluaciones[variable] = 0
+            justificaciones[variable] = "No se pudo generar justificación."
 
-    # Crear gráfico spider para habilidades blandas
-    crear_spider(evaluaciones_blandas, list(evaluaciones_blandas.keys()), "Habilidades Blandas", "blandas_spider.png")
-    pdf.image("blandas_spider.png", x=60, y=None, w=90)
-
-    for variable, evaluacion in evaluaciones_blandas.items():
-        pdf.set_font("Arial", 'U', 12)  # Subrayar el nombre de la variable
-        pdf.cell(0, 10, txt=f"{variable}: {evaluacion}", ln=True)
-        pdf.set_font("Arial", size=12)
-        pdf.multi_cell(0, 10, txt=f"{justificaciones_blandas.get(variable, 'No disponible')}")
-
-    # Evaluación de habilidades técnicas
-    pdf.ln(5)  # Reducir espacio entre secciones
-    pdf.set_font("Arial", 'B', 12)
-    pdf.cell(200, 10, txt="Evaluación de habilidades técnicas", ln=True)
-    pdf.set_font("Arial", size=12)
-
-    # Crear gráfico spider para habilidades técnicas
-    crear_spider(evaluaciones_tecnicas, list(evaluaciones_tecnicas.keys()), "Habilidades Técnicas", "tecnicas_spider.png")
-    pdf.image("tecnicas_spider.png", x=60, y=None, w=90)
-    for variable, evaluacion in evaluaciones_tecnicas.items():
-        pdf.set_font("Arial", 'U', 12)  # Subrayar el nombre de la variable
-        pdf.cell(0, 10, txt=f"{variable}: {evaluacion}", ln=True)
-        pdf.set_font("Arial", size=12)
-        pdf.multi_cell(0, 10, txt=f"{justificaciones_tecnicas.get(variable, 'No disponible')}")
-
-    # Recomendación final
-    #pdf.ln(10)
-    #pdf.set_font("Arial", 'B', 12)
-    #pdf.cell(200, 10, txt="Recomendación final:", ln=True)
-    #pdf.set_font("Arial", size=12)
-    #pdf.multi_cell(0, 10, txt="Basado en la evaluación técnica y blanda, el candidato tiene un buen desempeño general. Se recomienda su contratación, aunque sugerimos capacitación en habilidades blandas para mejorar la empatía y creatividad.")
-
-    # Configurar el título y agregar logo en la parte superior
-    #pdf.add_page()
-    #pdf.set_font('Arial', 'B', 16)
-    #pdf.cell(200, 30, txt="Anexo: Respuestas del candidato", ln=True, align='C')
-    #pdf.set_font("Arial", size=12)
-    #pdf.multi_cell(0, 10, txt=f"Pregunta situacional \n {pregunta_situacional} \n Respuesta: {respuesta_situacional}")
-    #pdf.multi_cell(0, 10, txt=f"Pregunta técnica 1:\n {pregunta_tecnica_1} \n Respuesta {respuesta_tecnica_1}")
-
-    pdf.add_page()
-    pdf.set_font('Arial', 'B', 16)
-    pdf.cell(200, 30, txt="Anexo: Respuestas del candidato", ln=True, align='C')
-    pdf.set_font("Arial", size=12)
-    pdf.set_font("Arial", 'BU', 12)
-    pdf.multi_cell(0, 10, txt="Pregunta situacional")
-    pdf.set_font("Arial", size=12)
-    pdf.multi_cell(0, 10, txt=f"{pregunta_situacional} \nRespuesta del candidato: {respuesta_situacional}")
-    pdf.set_font("Arial", 'BU', 12)
-    pdf.multi_cell(0, 10, txt="Pregunta técnica:")
-    pdf.set_font("Arial", size=12)
-    pdf.multi_cell(0, 10, txt=f"{pregunta_tecnica_1} \nRespuesta del candidato: {respuesta_tecnica_1}")
-
-
-    pdf_output_path = "/content/Informe_de_evaluacion_candidato.pdf"
-    pdf.output(pdf_output_path)
-
-    return pdf_output_path
-
-# Valores fijos para pruebas
-#perfil = "Desarrollador de Software"
-#respuesta_situacional = "Utilizaría la mediación y la comunicación abierta para resolver el conflicto."
-#respuesta_tecnica_1 = "Aplicaría metodologías ágiles para abordar el problema."
-#respuesta_tecnica_2 = "Realizaría un análisis de rendimiento detallado utilizando herramientas específicas."
-#respuesta_tecnica_3 = "Implementaría un plan de contingencia para minimizar el impacto."
-
-# Llamada a la función con valores fijos
-#pdf_output_path = generar_pdf(perfil, respuesta_situacional, respuesta_tecnica_1, respuesta_tecnica_2, respuesta_tecnica_3)
-#print(f"El PDF ha sido generado y guardado en: {pdf_output_path}")
+    return evaluaciones, justificaciones
