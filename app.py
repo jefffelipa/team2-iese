@@ -209,7 +209,7 @@ if st.session_state["paso_actual"] == 5:
     #pdf_output_path = generar_pdf(perfil, respuesta_situacional, respuesta_tecnica_1, respuesta_tecnica_2, respuesta_tecnica_3)
 
 # Paso 8: Finalización
-elif st.session_state["paso_actual"] == 8:
+elif st.session_state["paso_actual"] == 6:
     mostrar_progreso()
     st.title("Cuestionario Completado")
     st.write("Gracias por participar. Puedes cerrar esta ventana.")
