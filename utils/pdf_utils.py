@@ -54,7 +54,7 @@ def generar_pdf(perfil, respuesta_situacional, respuesta_tecnica_1, pregunta_sit
     pdf.cell(200, 30, txt="Informe de Evaluación", ln=True, align='C')
 
     # Agregar logo en la parte superior derecha
-    pdf.image("/content/IESE_LOGO_UPDATED_2023 (1).png", 150, 8, 33)
+    pdf.image("/IESE_LOGO_UPDATED_2023 (1).png", 150, 8, 33)
 
     # Margen superior
     pdf.ln(2)
