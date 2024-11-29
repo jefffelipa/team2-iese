@@ -11,32 +11,6 @@ from funciones import (
     evaluar_tecnicas,
 )
 
-import os
-import json
-from google.oauth2 import service_account
-from googleapiclient.discovery import build
-
-def autenticar_google_drive():
-    # Leer las credenciales desde la variable de entorno
-    credentials_json = os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON")
-    if not credentials_json:
-        raise ValueError("No se encontró la variable de entorno GOOGLE_APPLICATION_CREDENTIALS_JSON")
-    
-    # Reemplazar \n por saltos de línea reales en la clave privada
-    credentials_json = credentials_json.replace("\\n", "\n")
-    
-    # Parsear el JSON
-    credentials_info = json.loads(credentials_json)
-    
-    # Crear credenciales desde la información del servicio
-    credentials = service_account.Credentials.from_service_account_info(
-        credentials_info, scopes=["https://www.googleapis.com/auth/drive.file"]
-    )
-    
-    # Construir el cliente de la API de Google Drive
-    service = build('drive', 'v3', credentials=credentials)
-    return service
-    
 def crear_spider(datos, categorias, titulo, nombre_archivo):
     valores = list(datos.values())
     valores += valores[:1]  # Volver al inicio
@@ -187,28 +161,3 @@ def generar_pdf(perfil, respuesta_situacional, respuesta_tecnica_1, pregunta_sit
 # Llamada a la función con valores fijos
 #pdf_output_path = generar_pdf(perfil, respuesta_situacional, respuesta_tecnica_1, respuesta_tecnica_2, respuesta_tecnica_3)
 #print(f"El PDF ha sido generado y guardado en: {pdf_output_path}")
-
-# Función para cargar el PDF en una carpeta específica de Google Drive
-
-from googleapiclient.http import MediaFileUpload
-
-def cargar_pdf_a_drive(pdf_path, file_name, folder_id):
-    # Autenticar Google Drive
-    service = autenticar_google_drive()
-
-    # Metadatos del archivo
-    file_metadata = {
-        'name': file_name,  # Nombre del archivo en Google Drive
-        'parents': [folder_id]  # ID de la carpeta donde se guardará el archivo
-    }
-
-    # Crear el archivo y subirlo
-    media = MediaFileUpload(pdf_path, mimetype='application/pdf')
-
-    uploaded_file = service.files().create(
-        body=file_metadata,
-        media_body=media,
-        fields='id'
-    ).execute()
-
-    print(f"Archivo subido correctamente. ID del archivo: {uploaded_file.get('id')}")
