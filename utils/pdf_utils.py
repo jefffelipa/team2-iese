@@ -36,7 +36,7 @@ def autenticar_google_drive():
     # Construir el cliente de la API de Google Drive
     service = build('drive', 'v3', credentials=credentials)
     return service
-
+    
 def crear_spider(datos, categorias, titulo, nombre_archivo):
     valores = list(datos.values())
     valores += valores[:1]  # Volver al inicio
