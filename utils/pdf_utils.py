@@ -146,7 +146,7 @@ def generar_pdf(perfil, respuesta_situacional, respuesta_tecnica_1, pregunta_sit
     pdf.multi_cell(0, 10, txt=f"{pregunta_tecnica_1} \nRespuesta del candidato: {respuesta_tecnica_1}")
 
 
-    pdf_output_path = "/content/Informe_de_evaluacion_candidato.pdf"
+    pdf_output_path = "Informe_de_evaluacion_candidato.pdf"
     pdf.output(pdf_output_path)
 
     return pdf_output_path
