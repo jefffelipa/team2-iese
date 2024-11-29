@@ -7,7 +7,7 @@ from funciones import (
     evaluar_blandas,
     evaluar_tecnicas,
 )
-from utils.pdf_utils import generar_pdf, cargar_pdf_a_drive
+from utils.pdf_utils import generar_pdf
 from config_variables import variables_blandas, variables_tecnicas
 
 # Inicializar el estado si no existe
@@ -171,58 +171,6 @@ if st.session_state["paso_actual"] == 5:
         perfil, evaluaciones_blandas, justificaciones_blandas, evaluaciones_tecnicas, justificaciones_tecnicas
     )
 
-    # Obtener las respuestas y el perfil de la sesión o variables dinámicas
-    perfil = st.session_state.get("perfil_seleccionado", None)
-    respuesta_situacional = st.session_state.get("respuesta_situacional", "")
-    respuesta_tecnica_1 = st.session_state.get("respuesta_tecnica_1", "")
-    pregunta_situacional = st.session_state.get("pregunta_situacional", "")
-    pregunta_tecnica_1 = st.session_state.get("pregunta_tecnica_1", "")
-
-    # Generar el PDF solo si todas las respuestas están presentes
-    pdf_path = generar_pdf(perfil, respuesta_situacional, respuesta_tecnica_1, pregunta_situacional, pregunta_tecnica_1)
-
-    # Mostrar el PDF generado con el botón de descarga
-    st.title("### Informe de Evaluación del Candidato")
-    st.write("""De acuerdo a tus resulados hemos realizado una evaluación para el perfil seleccionado""")
-    
-    #st.markdown(f"**Descargar Informe**: [Haz clic aquí para descargar el PDF]({pdf_path})")
-
-import base64
-
-# Verificar si estamos en el paso 5
-if st.session_state.get("paso_actual") == 5:
-    # Botón único para realizar todas las acciones
-    if st.button("Generar informe", use_container_width=True):
-        # Generar el PDF
-        pdf_path = generar_pdf(
-            st.session_state.get("perfil_seleccionado", None),
-            st.session_state.get("respuesta_situacional", ""),
-            st.session_state.get("respuesta_tecnica_1", ""),
-            st.session_state.get("pregunta_situacional", ""),
-            st.session_state.get("pregunta_tecnica_1", "")
-        )
-
-        # Guardar el PDF en Google Drive
-        cargar_pdf_a_drive(
-            pdf_path,  # Ruta del PDF generado
-            "Informe_evaluacion_candidato.pdf",  # Nombre del archivo en Drive
-            "1jTQAO7iPsTH0yaCKdcaYw8a_FJXYwkKg"  # ID de la carpeta en Drive
-        )
-
-        # Leer el archivo PDF en formato binario
-        with open(pdf_path, "rb") as pdf_file:
-            pdf_data = pdf_file.read()
-            b64_pdf = base64.b64encode(pdf_data).decode("utf-8")
-
-        # Crear enlace HTML para descargar automáticamente el PDF
-        href = f'<html><script>var link = document.createElement("a"); link.href="data:application/pdf;base64,{b64_pdf}"; link.download="Informe_de_evaluacion.pdf"; link.click();</script></html>'
-        st.components.v1.html(href)
-
-        # Mostrar un mensaje de éxito
-        st.success("Informe generado, guardado descargado automáticamente.")
-
-
-
     # Mostrar las evaluaciones de habilidades blandas
     st.write("### Evaluación de Habilidades Blandas")
     for variable, resultado in evaluaciones_blandas.items():
@@ -236,6 +184,29 @@ if st.session_state.get("paso_actual") == 5:
         justificacion = justificaciones_tecnicas.get(variable, "No disponible")
         st.write(f"**{variable}**: {justificacion}")
         #st.write(f"Justificación: {justificacion}")
+
+    # Obtener las respuestas y el perfil de la sesión o variables dinámicas
+    perfil = st.session_state.get("perfil_seleccionado", None)
+    respuesta_situacional = st.session_state.get("respuesta_situacional", "")
+    respuesta_tecnica_1 = st.session_state.get("respuesta_tecnica_1", "")
+    pregunta_situacional = st.session_state.get("pregunta_situacional", "")
+    pregunta_tecnica_1 = st.session_state.get("pregunta_tecnica_1", "")
+
+    # Generar el PDF solo si todas las respuestas están presentes
+    pdf_path = generar_pdf(perfil, respuesta_situacional, respuesta_tecnica_1, pregunta_situacional, pregunta_tecnica_1)
+
+    # Mostrar el PDF generado con el botón de descarga
+    st.write("### Informe de Evaluación del Candidato")
+    #st.markdown(f"**Descargar Informe**: [Haz clic aquí para descargar el PDF]({pdf_path})")
+
+    with open(pdf_path, "rb") as f:
+            st.download_button("Descargar PDF", data=f, file_name="Informe_de_evaluacion.pdf", mime="application/pdf", use_container_width=True)
+
+    # Botón para finalizar el cuestionario
+    st.button("Finalizar Cuestionario", on_click=avanzar_paso, use_container_width=True)
+
+
+    #pdf_output_path = generar_pdf(perfil, respuesta_situacional, respuesta_tecnica_1, respuesta_tecnica_2, respuesta_tecnica_3)
 
 # Paso 8: Finalización
 elif st.session_state["paso_actual"] == 8:
