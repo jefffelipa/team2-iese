@@ -47,11 +47,11 @@ elif st.session_state["paso_actual"] == 2:
     st.subheader("Seleccione su perfil")
     perfiles = [
         "Seleccione un perfil...",
-        "Desarrollador de Software",
-        "Consultor de Estrategia",
-        "Analista de Marketing",
-        "Analista de Logística",
-        "Analista Financiero",
+        "Chief Financial Officer (CFO)",
+        "Chief Operating Officer (COO)",
+        "Chief Marketing Officer (CMO)",
+        "Chief Technology Officer (CTO)",
+        "Chief Human Resources Officer (CHRO)",
     ]
     perfil = st.selectbox("Seleccione el perfil del candidato:", perfiles)
 
